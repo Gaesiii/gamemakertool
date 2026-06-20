@@ -1,0 +1,56 @@
+{
+  "project_name": "test_game",
+  "objects": {
+    "obj_enemy": {
+      "parent": null,
+      "default_sprite": "spr_enemy",
+      "events": {
+        "Create": "hp = 50;\nspd = 2;",
+        "Step": "// Đuổi theo người chơi\nvar _dir = point_direction(x, y, obj_player.x, obj_player.y);\nx += lengthdir_x(spd, _dir);\ny += lengthdir_y(spd, _dir);\n\ninstance_create_depth(x, y, -100, obj_bullet_enemy);"
+      },
+      "interactions": {
+        "spawns": [
+          "obj_bullet_enemy"
+        ],
+        "collides_with": [],
+        "manipulates": []
+      }
+    },
+    "obj_player": {
+      "parent": null,
+      "default_sprite": "spr_player",
+      "events": {
+        "Collision_obj_enemy": "// Va chạm với kẻ địch\nhp -= 10;\nwith (obj_enemy) {\n    instance_destroy();\n}",
+        "Collision_obj_wall": "// Va chạm với tường\nx = xprevious;\ny = yprevious;",
+        "Create": "// Khởi tạo nhân vật\nhp = 100;\nspd = 4;\nscore = 0;",
+        "Step": "// Di chuyển\nx += spd * keyboard_check(vk_right);\ny += spd * keyboard_check(vk_down);\n\nif (keyboard_check_pressed(vk_space)) {\n    instance_create_layer(x, y, \"Instances\", obj_bullet);\n}\n\nif (place_meeting(x, y, obj_wall)) {\n    x = xprevious;\n    y = yprevious;\n}\n\nobj_score_manager.score = score;"
+      },
+      "interactions": {
+        "spawns": [
+          "obj_bullet"
+        ],
+        "collides_with": [
+          "obj_enemy",
+          "obj_wall"
+        ],
+        "manipulates": [
+          "obj_enemy",
+          "obj_score_manager"
+        ]
+      }
+    },
+    "obj_score_manager": {
+      "parent": "obj_base_manager",
+      "default_sprite": null,
+      "events": {
+        "Create": "score = 0;",
+        "Draw_GUI": "// Hiển thị điểm\ndraw_set_font(fnt_score);\ndraw_text(10, 10, \"Score: \" + string(score));"
+      },
+      "interactions": {
+        "spawns": [],
+        "collides_with": [],
+        "manipulates": []
+      }
+    }
+  }
+}

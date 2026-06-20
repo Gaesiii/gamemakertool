@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/parse.py": {
+      "includeFiles": "tool.py"
+    }
+  }
+}

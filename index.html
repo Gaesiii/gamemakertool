@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GMS2 Project Parser</title>
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    background: #1a1b2e;
+    color: #c5c6e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .container {
+    width: 100%;
+    max-width: 880px;
+  }
+  h1 {
+    color: #e0e1ff;
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #7a7ba8;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .group {
+    background: #242540;
+    border: 1px solid #3a3b5c;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .group h2 {
+    color: #8b8fd8;
+    font-size: 14px;
+    margin: 0 0 14px;
+  }
+  input[type="file"] {
+    color: #c5c6e0;
+    margin-bottom: 14px;
+  }
+  button {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #parseBtn {
+    background: linear-gradient(to right, #5c5dff, #8b5cf6);
+    color: white;
+  }
+  #parseBtn:disabled {
+    background: #3a3b5c;
+    color: #6a6b8c;
+    cursor: not-allowed;
+  }
+  #saveBtn {
+    background: #1a6b4a;
+    color: #c0ffd8;
+    border: 1px solid #2a8b5a;
+    margin-top: 10px;
+  }
+  #saveBtn:disabled {
+    background: #2a2b48;
+    color: #5a5b7c;
+    border-color: #3a3b5c;
+    cursor: not-allowed;
+  }
+  #status {
+    color: #9d9ed8;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  pre#output {
+    background: #1e1f38;
+    border: 1px solid #3a3b5c;
+    border-radius: 8px;
+    padding: 14px;
+    max-height: 500px;
+    overflow: auto;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 12px;
+    color: #d0d1ee;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>GMS2 Project Parser</h1>
+    <div class="subtitle">Extract architecture, code &amp; interactions from .yyz files</div>
+
+    <div class="group">
+      <h2>INPUT</h2>
+      <input type="file" id="fileInput" accept=".yyz,.zip" />
+      <br />
+      <button id="parseBtn">▶ Parse Project</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="group">
+      <h2>OUTPUT JSON</h2>
+      <pre id="output">Parsed JSON will appear here...</pre>
+      <button id="saveBtn" disabled>💾 Save JSON</button>
+    </div>
+  </div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const parseBtn = document.getElementById('parseBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const status = document.getElementById('status');
+  const output = document.getElementById('output');
+  let lastResult = null;
+
+  parseBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      status.textContent = 'Please choose a .yyz file first.';
+      return;
+    }
+
+    parseBtn.disabled = true;
+    saveBtn.disabled = true;
+    status.textContent = 'Parsing...';
+    output.textContent = '';
+    lastResult = null;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/parse', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        status.textContent = 'Error';
+        output.textContent = data.error || 'Unknown error';
+        return;
+      }
+
+      lastResult = data;
+      const objCount = Object.keys(data.objects || {}).length;
+      status.textContent = `✔ ${objCount} object(s) from "${data.project_name || '?'}"`;
+      output.textContent = JSON.stringify(data, null, 2);
+      saveBtn.disabled = false;
+    } catch (err) {
+      status.textContent = 'Error';
+      output.textContent = String(err);
+    } finally {
+      parseBtn.disabled = false;
+    }
+  });
+
+  saveBtn.addEventListener('click', () => {
+    if (!lastResult) return;
+    const name = (lastResult.project_name || 'output') + '_parsed.json';
+    const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+</body>
+</html>
