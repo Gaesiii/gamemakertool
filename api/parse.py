@@ -4,12 +4,18 @@ import zipfile
 import tempfile
 import traceback
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_DIR)
 import tool
 
 app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return send_file(os.path.join(ROOT_DIR, "index.html"))
 
 
 @app.route("/api/parse", methods=["POST"])
