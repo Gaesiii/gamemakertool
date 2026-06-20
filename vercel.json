@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/parse.py": {
-      "runtime": "python3.12",
+      "runtime": "@vercel/python@6.45.1",
       "includeFiles": "tool.py"
     }
   }
