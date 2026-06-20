@@ -1,6 +1,7 @@
 {
   "functions": {
     "api/parse.py": {
+      "runtime": "python3.12",
       "includeFiles": "tool.py"
     }
   }
